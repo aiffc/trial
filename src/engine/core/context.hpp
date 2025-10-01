@@ -26,6 +26,9 @@ public:
    * 初始化函数，用来创建游戏上下文
    */
   void init();
+  /*
+   * 获取SDL窗口
+   */
+  SDL_Window *getWindow() const;
 };
-
 } // namespace Engine::Core

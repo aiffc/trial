@@ -3,11 +3,13 @@
 #include <memory>
 namespace Engine::Core {
 class Context;
+class Time;
 
 class Game final {
 private:
   bool mRunning = false;             // 判断游戏是否运行
   std::unique_ptr<Context> mContext; // 游戏上下文
+  std::unique_ptr<Time> mTime;       // 时间管理
 
 private:
   /* 游戏更新函数 */

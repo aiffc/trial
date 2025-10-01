@@ -2,10 +2,12 @@
 #include "SDL3/SDL_events.h"
 #include "context.hpp"
 #include "spdlog/spdlog.h"
+#include "time.hpp"
 #include <memory>
 
 namespace Engine::Core {
-Game::Game() : mContext{std::make_unique<Context>()} {
+Game::Game()
+    : mContext{std::make_unique<Context>()}, mTime{std::make_unique<Time>()} {
   spdlog::trace("游戏初始化");
   mRunning = true;
 }
@@ -28,6 +30,7 @@ void Game::render() {}
 void Game::init() {
   spdlog::trace("游戏内部初始化");
   mContext->init();
+  mTime->init();
 }
 
 void Game::deinit() { spdlog::trace("游戏内部退出"); }

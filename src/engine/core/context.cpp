@@ -34,4 +34,6 @@ void Context::deinit() {
   spdlog::trace("退出SDL");
   SDL_Quit();
 }
+
+SDL_Window *Context::getWindow() const { return window; }
 } // namespace Engine::Core
