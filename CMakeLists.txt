@@ -30,6 +30,7 @@ set(SOURCES
   src/engine/core/context.cpp
   src/engine/core/game.cpp
   src/engine/core/time.cpp
+  src/engine/render/renderer.cpp
 )
 
 add_executable(${TARGET} ${SOURCES})

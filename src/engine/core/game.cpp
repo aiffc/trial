@@ -14,9 +14,12 @@ Game::Game()
 
 Game::~Game() { spdlog::trace("游戏退出"); }
 
-void Game::update([[maybe_unused]] float dt) {}
+void Game::update([[maybe_unused]] float dt) {
+  // TODO
+}
 
 void Game::event() {
+  // 当前只做退出
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
     if (event.type == SDL_EVENT_QUIT) {
@@ -25,23 +28,25 @@ void Game::event() {
   }
 }
 
-void Game::render() {}
+void Game::render() {
+  // TODO
+}
 
 void Game::init() {
   spdlog::trace("游戏内部初始化");
-  mContext->init();
-  mTime->init();
+  mContext->init(); // 初始化上下文
+  mTime->init();    // 初始化时间管理器
 }
 
 void Game::deinit() { spdlog::trace("游戏内部退出"); }
 
 void Game::run() {
-  init();
+  init(); // 进行内部初始化
   while (mRunning) {
     event();
     update(0.0);
     render();
   }
-  deinit();
+  deinit(); // 进行内部销毁
 }
 } // namespace Engine::Core

@@ -1,11 +1,14 @@
 #pragma once
-#include "SDL3/SDL.h"
-#include "SDL3/SDL_video.h"
 
+#include <memory>
+namespace Engine::Render {
+class Renderer;
+
+}
 namespace Engine::Core {
 class Context final {
 private:
-  SDL_Window *window; // SDL窗口
+  std::unique_ptr<Engine::Render::Renderer> mRender;
 
 private:
   /* 上下文退出函数 */
@@ -22,13 +25,7 @@ public:
   Context &operator=(Context &) = delete;
   Context &&operator=(Context &&) = delete;
 
-  /*
-   * 初始化函数，用来创建游戏上下文
-   */
+  /* 初始化函数，用来创建游戏上下文 */
   void init();
-  /*
-   * 获取SDL窗口
-   */
-  SDL_Window *getWindow() const;
 };
 } // namespace Engine::Core
