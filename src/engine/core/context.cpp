@@ -1,5 +1,4 @@
 #include "context.hpp"
-#include "../render/renderer.hpp"
 #include "SDL3/SDL_error.h"
 #include "SDL3/SDL_init.h"
 #include "spdlog/spdlog.h"
@@ -27,4 +26,17 @@ void Context::deinit() {
   spdlog::trace("退出SDL");
   SDL_Quit();
 }
+
+void Context::begin(float r, float g, float b, float a) {
+  mRender->begin(r, g, b, a);
+}
+void Context::end() { mRender->end(); }
+void Context::setViewport(float x, float y, float w, float h, float min_depth,
+                          float max_depth) {
+  mRender->setViewport(x, y, w, h, min_depth, max_depth);
+}
+void Context::setScissor(int x, int y, int w, int h) {
+  mRender->setScissor(x, y, w, h);
+}
+void Context::draw(uint32_t vertices) { mRender->draw(vertices); }
 } // namespace Engine::Core

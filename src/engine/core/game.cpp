@@ -1,4 +1,5 @@
 #include "game.hpp"
+#include "../render/pipeline/triangle.hpp"
 #include "SDL3/SDL_events.h"
 #include "context.hpp"
 #include "spdlog/spdlog.h"
@@ -29,7 +30,12 @@ void Game::event() {
 }
 
 void Game::render() {
-  // TODO
+  mContext->begin();
+  mContext->bindPipeline<Engine::Render::TrianglePipeline>();
+  mContext->setViewport();
+  mContext->setScissor();
+  mContext->draw(3);
+  mContext->end();
 }
 
 void Game::init() {

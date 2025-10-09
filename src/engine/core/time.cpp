@@ -1,5 +1,4 @@
 #include "time.hpp"
-#include "SDL3/SDL_oldnames.h"
 #include "SDL3/SDL_timer.h"
 #include "spdlog/spdlog.h"
 #include <cstdint>
