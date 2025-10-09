@@ -3,21 +3,10 @@
 #include "spdlog/spdlog.h"
 #include <cstdint>
 #include <stdexcept>
-#include <string_view>
+// #include <string_view>
 #include <vector>
 
 namespace Engine::Render {
-
-TrianglePipeline::TrianglePipeline(SDL_GPUDevice *device,
-                                   const SDL_GPUTextureFormat format,
-                                   std::string_view vert_path,
-                                   std::string_view frag_path)
-    : mFormat{format} {
-  mVertPath = vert_path;
-  mFragPath = frag_path;
-  mDevice = device;
-  mPipeline = nullptr;
-}
 
 void TrianglePipeline::init() {
   spdlog::trace("创建三角形管线");
@@ -51,11 +40,6 @@ void TrianglePipeline::init() {
   }
 }
 
-TrianglePipeline::~TrianglePipeline() {
-  spdlog::trace("销毁三角形管线");
-  SDL_ReleaseGPUGraphicsPipeline(mDevice, mPipeline);
-  mPipeline = nullptr;
-  mDevice = nullptr;
-}
+TrianglePipeline::~TrianglePipeline() { spdlog::trace("销毁三角形管线"); }
 
 } // namespace Engine::Render

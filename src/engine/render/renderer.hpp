@@ -14,8 +14,8 @@ class GraphicsPipeline;
 
 class Renderer final {
 private:
-  SDL_GPUDevice *mDevice; // gpu逻辑设备
-  SDL_Window *mWindow;    // SDL窗口
+  SDL_GPUDevice *mDevice = nullptr; // gpu逻辑设备
+  SDL_Window *mWindow = nullptr;    // SDL窗口
   SDL_GPUCommandBuffer *mCmd = nullptr;
   SDL_GPUTexture *mSwapchainTexture = nullptr;
   SDL_GPURenderPass *mRenderPass = nullptr;
@@ -70,10 +70,6 @@ public:
   SDL_GPUDevice *getDevice() const;
   /* 获取SDL窗口 */
   SDL_Window *getWindow() const;
-
-  // SDL_GPUCommandBuffer *getCmd() const;
-  // SDL_GPUTexture *getSwapchainTexture() const;
-  // SDL_GPURenderPass *getRenderPass() const;
 
   /* 初始化函数，用来创建游戏上下文 */
   /* 开始渲染 */

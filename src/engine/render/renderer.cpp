@@ -65,14 +65,6 @@ SDL_GPUDevice *Renderer::getDevice() const { return mDevice; }
 
 SDL_Window *Renderer::getWindow() const { return mWindow; }
 
-// SDL_GPUCommandBuffer *Renderer::getCmd() const { return mCmd; }
-
-// SDL_GPUTexture *Renderer::getSwapchainTexture() const {
-//   return mSwapchainTexture;
-// }
-
-// SDL_GPURenderPass *Renderer::getRenderPass() const { return mRenderPass; }
-
 void Renderer::begin(float r, float g, float b, float a) {
   mCmd = SDL_AcquireGPUCommandBuffer(mDevice);
   if (mCmd == nullptr) {

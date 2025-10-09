@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SDL3/SDL_gpu.h"
+#include "spdlog/spdlog.h"
 #include <string>
 #include <string_view>
 
@@ -16,9 +17,10 @@ SDL_GPUShader *loadShader(SDL_GPUDevice *device, SDL_GPUShaderStage stage,
 class GraphicsPipeline {
 public:
   SDL_GPUGraphicsPipeline *mPipeline; /* 图形管线 */
-  SDL_GPUDevice *mDevice;             /* gpu设备 */
+  SDL_GPUDevice *&mDevice;            /* gpu设备, 引用 */
   std::string mVertPath;              /* vert shader目录 */
   std::string mFragPath;              /* frag shader目录 */
+  SDL_GPUTextureFormat mFormat;       /* 交换链图像格式 */
 
 public:
   /* 获取图形管线 */
@@ -33,12 +35,19 @@ public:
   GraphicsPipeline &operator=(GraphicsPipeline &) = delete;
   GraphicsPipeline &operator=(GraphicsPipeline &&) = delete;
 
-  GraphicsPipeline() = default;
-  // virtual void create([[maybe_unused]] SDL_GPUDevice *mDevice) {}
-  // virtual void destroy([[maybe_unused]] SDL_GPUDevice *mDevice) {}
-  /* 初始化函数 */
-  virtual void init() {}
-  virtual ~GraphicsPipeline() { mPipeline = nullptr, mDevice = nullptr; }
+  GraphicsPipeline() = delete;
+  /* 基类构造函数，子类可以用此构造函数进行构造 */
+  explicit GraphicsPipeline(SDL_GPUDevice *&device, SDL_GPUTextureFormat format,
+                            std::string_view vpath, std::string_view fpath)
+      : mPipeline{nullptr}, mDevice{device}, mVertPath{vpath}, mFragPath{fpath},
+        mFormat{format} {}
+  /* 初始化函数，创建图形管线 */
+  virtual void init() = 0;
+  virtual ~GraphicsPipeline() {
+    spdlog::trace("销毁图形管线");
+    SDL_ReleaseGPUGraphicsPipeline(mDevice, mPipeline);
+    mPipeline = nullptr;
+  }
 };
 
 } // namespace Engine::Render
