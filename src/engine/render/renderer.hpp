@@ -75,14 +75,21 @@ public:
   // SDL_GPUTexture *getSwapchainTexture() const;
   // SDL_GPURenderPass *getRenderPass() const;
 
+  /* 初始化函数，用来创建游戏上下文 */
+  /* 开始渲染 */
   void begin(float r = 0.0, float g = 0.0, float b = 0.0, float a = 1.0);
+  /* 结束渲染 */
   void end();
+  /* 设置视口 */
   void setViewport(float x = 0.0, float y = 0.0, float w = 1024.0,
                    float h = 720.0, float min_depth = 0.0,
                    float max_depth = 1.0);
+  /* 设置视口裁剪 */
   void setScissor(int x = 0, int y = 0, int w = 1024, int h = 720);
+  /* 开始绘制 */
   void draw(uint32_t);
 
+  /* 绑定渲染管线 */
   template <typename T> void bindPipeline() const {
     auto pipeline = getPipeline<T>();
     if (pipeline) {

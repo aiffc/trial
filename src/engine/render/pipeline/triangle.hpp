@@ -8,14 +8,16 @@ namespace Engine::Render {
 
 class TrianglePipeline final : public GraphicsPipeline {
 private:
-  const SDL_GPUTextureFormat mFormat;
+  const SDL_GPUTextureFormat mFormat; // 交换链图像格式
 
 public:
+  /* 构造函数 */
   TrianglePipeline(SDL_GPUDevice *device, const SDL_GPUTextureFormat format,
                    std::string_view vert_path, std::string_view frag_path);
+  /* 析构函数 */
   ~TrianglePipeline();
 
-  void init();
+  void init() override;
 
   TrianglePipeline(TrianglePipeline &) = delete;
   TrianglePipeline(TrianglePipeline &&) = delete;
