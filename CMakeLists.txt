@@ -26,13 +26,7 @@ find_package(nlohmann_json REQUIRED)
 find_package(spdlog REQUIRED)
 
 set(SOURCES
-  src/main.cpp
-  src/engine/core/context.cpp
-  src/engine/core/game.cpp
-  src/engine/core/time.cpp
-  src/engine/render/pipeline/graphics_pipeline.cpp
-  src/engine/render/pipeline/triangle.cpp
-  src/engine/render/renderer.cpp
+  main.cpp
 )
 
 add_executable(${TARGET} ${SOURCES})
