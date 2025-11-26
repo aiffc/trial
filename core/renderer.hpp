@@ -138,9 +138,9 @@ public:
       return false;
     }
 
-    if (!SDL_AcquireGPUSwapchainTexture(m_context.cmd, m_window.get(),
-                                        &m_context.swapchain_texture, nullptr,
-                                        nullptr)) {
+    if (!SDL_WaitAndAcquireGPUSwapchainTexture(m_context.cmd, m_window.get(),
+                                                &m_context.swapchain_texture, nullptr,
+                                                nullptr)) {
       spdlog::error("请求交换链图像失败{}", SDL_GetError());
       return false;
     }
