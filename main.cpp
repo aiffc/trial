@@ -1,6 +1,7 @@
-#include "core/pipelines/triangle.hpp"
+#include "core/pipelines/vertex.hpp"
 #include "core/renderer.hpp"
 #include <memory>
+#include <vector>
 
 #define SDL_MAIN_USE_CALLBACKS 1 /* use the callbacks instead of main() */
 #include <SDL3/SDL.h>
@@ -18,6 +19,11 @@ SDL_AppResult SDL_AppInit(void **appstate [[maybe_unused]],
   if (!renderer->init()) {
     return SDL_APP_FAILURE;
   }
+  std::vector<engine::render::VertexBuffStruct> datas{
+      {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+      {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+      {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};;
+  renderer->addBuff<engine::render::VertexBuffStruct>("triangle", datas);
   return SDL_APP_CONTINUE;
 }
 
@@ -31,8 +37,8 @@ SDL_AppResult SDL_AppEvent(void *appstate [[maybe_unused]], SDL_Event *event) {
 SDL_AppResult SDL_AppIterate(void *appstate [[maybe_unused]]) {
 
   if (renderer->begin()) {
-    if (renderer->bind<engine::render::TrianglePipeline>()) {
-      renderer->drawPrimitives();
+    if (renderer->bindPipeline<engine::render::VertexBuff>()) {
+      renderer->drawBuff("triangle");
     }
     renderer->end();
   }
