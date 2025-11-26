@@ -12,10 +12,10 @@ class TrianglePipeline final : public BasePipeline {
 private:
 public:
   using BasePipeline::BasePipeline;
-  ~TrianglePipeline() = default;
+  ~TrianglePipeline() override = default;
 
-  virtual void init(const std::filesystem::path &vert,
-                    const std::filesystem::path &frag) {
+  void init(const std::filesystem::path &vert,
+            const std::filesystem::path &frag) override {
     if (!m_device) {
       spdlog::error("graphics pipeline初始化失败，device为空");
       return;
