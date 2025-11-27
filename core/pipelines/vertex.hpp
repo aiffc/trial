@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <vector>
+#include "../render_object.hpp"
 
 namespace engine::render {
 
@@ -91,21 +92,17 @@ public:
 
     }};
     SDL_GPUGraphicsPipelineCreateInfo create_info{
-        .vertex_shader = vert_shader,
-        .fragment_shader = frag_shader,
-        .vertex_input_state =
-            {
-                .vertex_buffer_descriptions = vdescription.data(),
-                .num_vertex_buffers =
-                    static_cast<uint32_t>(vdescription.size()),
-                .vertex_attributes = vattribute.data(),
-                .num_vertex_attributes =
-                    static_cast<uint32_t>(vattribute.size()),
+      .vertex_shader = vert_shader, .fragment_shader = frag_shader,
+      .vertex_input_state =
+          {
+              .vertex_buffer_descriptions = vdescription.data(),
+              .num_vertex_buffers = static_cast<uint32_t>(vdescription.size()),
+              .vertex_attributes = vattribute.data(),
+              .num_vertex_attributes = static_cast<uint32_t>(vattribute.size()),
 
-            },
-        .primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST,
-        .rasterizer_state =
-            {
+          },
+      .primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST,
+      .rasterizer_state = {
                 .fill_mode = SDL_GPU_FILLMODE_FILL,
                 .cull_mode = SDL_GPU_CULLMODE_BACK,
                 .front_face = SDL_GPU_FRONTFACE_COUNTER_CLOCKWISE,
@@ -175,5 +172,7 @@ public:
   VertexBuff &operator=(VertexBuff &) = delete;
   VertexBuff &operator=(VertexBuff &&) = delete;
 };
+
+template class RenderObject<VertexBuffStruct>;
 
 } // namespace engine::render

@@ -11,25 +11,22 @@
 #include <cstdint>
 #include <cstring>
 #include <memory>
-#include <string>
+#include "render_object.hpp"
 #include <type_traits>
 #include <typeindex>
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
+
 namespace engine::render {
+
+template <typename T> class RenderObject;
 
 struct RenderContext {
   SDL_GPUCommandBuffer *cmd;
   SDL_GPUTexture *swapchain_texture;
   SDL_GPURenderPass *render_pass;
-};
-
-struct BuffInfo {
-  uint32_t size;
-  uint32_t type_size;
-  SDL_GPUBuffer *vbuff{nullptr};
-  SDL_GPUBuffer *ibuff{nullptr};
 };
 
 class Renderer final {
@@ -59,12 +56,20 @@ private:
   std::unordered_map<std::type_index, std::unique_ptr<BasePipeline>>
       m_pipelines;
 
-  std::unordered_map<std::string, BuffInfo> m_vertex_buffs;
+public:
+  Renderer() = default;
+  ~Renderer() {
+    SDL_WaitForGPUSwapchain(m_device.get(), m_window.get());
+    SDL_WaitForGPUIdle(m_device.get());
+    m_pipelines.clear();
+    SDL_ReleaseWindowFromGPUDevice(m_device.get(), m_window.get());
+    m_window.reset();
+    m_device.reset();
+  }
 
-private:
   template <typename T>
-  SDL_GPUBuffer *createBuff(size_t type_size,
-                            const std::vector<T>& datas, SDL_GPUBufferUsageFlags usage) {
+  [[nodiscard]] SDL_GPUBuffer *createBuff(const std::vector<T> &datas,
+                                          SDL_GPUBufferUsageFlags usage){
     SDL_GPUBufferCreateInfo vbuff_info{
         .usage = usage,
         .size = static_cast<uint32_t>(sizeof(T) * datas.size()),
@@ -91,8 +96,7 @@ private:
     std::memcpy(data, datas.data(), sizeof(T) * datas.size());
     SDL_UnmapGPUTransferBuffer(m_device.get(), tbuff);
 
-    SDL_GPUCommandBuffer *cmd =
-        SDL_AcquireGPUCommandBuffer(m_device.get());
+    SDL_GPUCommandBuffer *cmd = SDL_AcquireGPUCommandBuffer(m_device.get());
     if (!cmd) {
       spdlog::error("请求command buffer失败");
       return nullptr;
@@ -103,9 +107,9 @@ private:
       return nullptr;
     }
 
-    SDL_GPUTransferBufferLocation tbl {
-      .transfer_buffer = tbuff,
-      .offset = 0,
+    SDL_GPUTransferBufferLocation tbl{
+        .transfer_buffer = tbuff,
+        .offset = 0,
     };
     SDL_GPUBufferRegion br{
         .buffer = buff,
@@ -119,17 +123,13 @@ private:
     return buff;
   }
 
-public:
-  Renderer() = default;
-  ~Renderer() {
-    removeAllVBuff();
-    SDL_WaitForGPUSwapchain(m_device.get(), m_window.get());
-    SDL_WaitForGPUIdle(m_device.get());
-    m_pipelines.clear();
-    SDL_ReleaseWindowFromGPUDevice(m_device.get(), m_window.get());
-    m_window.reset();
-    m_device.reset();
+  void destroyBuff(SDL_GPUBuffer *buff) {
+    if (buff) {
+      SDL_ReleaseGPUBuffer(m_device.get(), buff);
+      buff = nullptr;
+    }
   }
+
   /*********************** pipeline ***********************/
   template <typename T>
   T *addPipeline(const std::filesystem::path &vert,
@@ -168,68 +168,6 @@ public:
     return nullptr;
   }
 
-  /*********************** buff ***********************/
-  template <typename T>
-  void addBuff(const std::string &key, const std::vector<T> &datas, const std::vector<uint32_t>& idatas = {}) {
-    if (auto it = m_vertex_buffs.find(key); it != m_vertex_buffs.end()) {
-      return;
-    }
-    SDL_GPUBuffer *vbuff =
-      createBuff<T>(sizeof(T), datas, SDL_GPU_BUFFERUSAGE_VERTEX);
-    SDL_GPUBuffer *ibuff = nullptr;
-    if (!idatas.empty()) {
-      ibuff = createBuff<uint32_t>(sizeof(uint32_t), idatas,
-                         SDL_GPU_BUFFERUSAGE_INDEX);
-    }
-    m_vertex_buffs.emplace(key,
-                           BuffInfo{
-                               .size = static_cast<uint32_t>(datas.size()),
-                               .type_size = static_cast<uint32_t>(sizeof(T)),
-                               .vbuff = std::move(vbuff),
-                               .ibuff = std::move(ibuff),
-                           });
-  }
-
-  SDL_GPUBuffer *getVBuff(const std::string &key) {
-    if (auto it = m_vertex_buffs.find(key); it != m_vertex_buffs.end()) {
-      return it->second.vbuff;
-    }
-    return nullptr;
-  }
-
-  SDL_GPUBuffer *getIBuff(const std::string &key) {
-    if (auto it = m_vertex_buffs.find(key); it != m_vertex_buffs.end()) {
-      return it->second.ibuff;
-    }
-    return nullptr;
-  }
-
-  uint32_t getVertexSize(const std::string &key) {
-    if (auto it = m_vertex_buffs.find(key); it != m_vertex_buffs.end()) {
-      return it->second.size;
-    }
-    return 0;
-  }
-
-  void removeBuff(const std::string &key) {
-    if (auto it = m_vertex_buffs.find(key); it != m_vertex_buffs.end()) {
-      if (it->second.vbuff)
-        SDL_ReleaseGPUBuffer(m_device.get(), it->second.vbuff);
-      if (it->second.ibuff)
-        SDL_ReleaseGPUBuffer(m_device.get(), it->second.ibuff);
-      m_vertex_buffs.erase(it);
-    }
-  }
-
-  void removeAllVBuff() {
-    for (auto &[key, val] : m_vertex_buffs) {
-      if (val.vbuff)
-        SDL_ReleaseGPUBuffer(m_device.get(), val.vbuff);
-      if (val.ibuff)
-        SDL_ReleaseGPUBuffer(m_device.get(), val.ibuff);
-    }
-  }
-
   /*********************** renderer ***********************/
   bool init() {
     auto *device = SDL_CreateGPUDevice(
@@ -250,8 +188,8 @@ public:
     }
     m_window = std::unique_ptr<SDL_Window, WindowDelter>(window);
     m_device = std::unique_ptr<SDL_GPUDevice, DeviceDeleter>(device);
-    addPipeline<VertexBuff>("../shaders/vertex_buff/vert.spv",
-                            "../shaders/vertex_buff/frag.spv");
+    addPipeline<VertexBuff>("./shaders/vertex_buff/vert.spv",
+                            "./shaders/vertex_buff/frag.spv");
     return true;
   }
 
@@ -330,28 +268,39 @@ public:
     return false;
   }
 
-  void drawBuff(const std::string &key) {
+  void drawBuff(SDL_GPUBuffer* vbuff, uint32_t size, SDL_GPUBuffer* ibuff = nullptr) {
     if (!m_context.render_pass) {
+      spdlog::error("render pass为空");
       return;
     }
-    SDL_GPUBuffer *vbuff = getVBuff(key);
-    SDL_GPUBuffer *ibuff = getIBuff(key);
-    if (!vbuff) {return ;}
 
-    SDL_GPUBufferBinding vbind {
-      .buffer = vbuff,
-      .offset = 0,
+    if (!vbuff) {
+      spdlog::error("vbuff为空");
+      return;
+    }
+
+    SDL_GPUBufferBinding vbind{
+        .buffer = vbuff,
+        .offset = 0,
     };
     SDL_BindGPUVertexBuffers(m_context.render_pass, 0, &vbind, 1);
     if (ibuff) {
       SDL_GPUBufferBinding ibind{
-        .buffer = ibuff,
+          .buffer = ibuff,
           .offset = 0,
       };
       SDL_BindGPUIndexBuffer(m_context.render_pass, &ibind,
                              SDL_GPU_INDEXELEMENTSIZE_32BIT);
     }
-    SDL_DrawGPUPrimitives(m_context.render_pass, getVertexSize(key), 1, 0, 0);
+    SDL_DrawGPUPrimitives(m_context.render_pass, size, 1, 0, 0);
+  }
+
+  template <typename T, typename... Args>
+  std::unique_ptr<RenderObject<T>> createRenderObject(Args&&... args) {
+    auto ret =
+        std::make_unique<RenderObject<T>>(this, std::forward<Args>(args)...);
+    ret->init();
+    return ret;
   }
 
   Renderer(Renderer &) = delete;
