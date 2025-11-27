@@ -3,6 +3,7 @@
 // #include "graphics_pipeline.hpp"
 #include "pipelines/base.hpp"
 #include "pipelines/vertex.hpp"
+#include "render_object.hpp"
 #include "spdlog/spdlog.h"
 #include <SDL3/SDL_error.h>
 #include <SDL3/SDL_gpu.h>
@@ -11,13 +12,11 @@
 #include <cstdint>
 #include <cstring>
 #include <memory>
-#include "render_object.hpp"
 #include <type_traits>
 #include <typeindex>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
 
 namespace engine::render {
 
@@ -69,7 +68,7 @@ public:
 
   template <typename T>
   [[nodiscard]] SDL_GPUBuffer *createBuff(const std::vector<T> &datas,
-                                          SDL_GPUBufferUsageFlags usage){
+                                          SDL_GPUBufferUsageFlags usage) {
     SDL_GPUBufferCreateInfo vbuff_info{
         .usage = usage,
         .size = static_cast<uint32_t>(sizeof(T) * datas.size()),
@@ -250,12 +249,6 @@ public:
     }
   }
 
-  void drawPrimitives() {
-    if (m_context.render_pass) {
-      SDL_DrawGPUPrimitives(m_context.render_pass, 3, 1, 0, 0);
-    }
-  }
-
   template <typename T> bool bindPipeline() {
     static_assert(std::is_base_of<BasePipeline, T>::value,
                   "T类型必须继承自BasePipeline");
@@ -268,8 +261,35 @@ public:
     return false;
   }
 
-  void drawBuff(SDL_GPUBuffer* vbuff, uint32_t size, SDL_GPUBuffer* ibuff = nullptr) {
-    if (!m_context.render_pass) {
+  void drawBuff(SDL_GPUBuffer *vbuff, SDL_GPUBuffer *ibuff, uint32_t size) {
+    if (!m_context.render_pass || size == 0) {
+      spdlog::error("render pass为空");
+      return;
+    }
+
+    if (!vbuff && !ibuff) {
+      spdlog::error("vbuff为空");
+      return;
+    }
+
+    SDL_GPUBufferBinding vbind{
+        .buffer = vbuff,
+        .offset = 0,
+    };
+    SDL_BindGPUVertexBuffers(m_context.render_pass, 0, &vbind, 1);
+
+    SDL_GPUBufferBinding ibind{
+        .buffer = ibuff,
+        .offset = 0,
+    };
+    SDL_BindGPUIndexBuffer(m_context.render_pass, &ibind,
+                           SDL_GPU_INDEXELEMENTSIZE_32BIT);
+
+    SDL_DrawGPUIndexedPrimitives(m_context.render_pass, size, 1, 0, 0, 0);
+  }
+
+  void drawBuff(SDL_GPUBuffer *vbuff, uint32_t size) {
+    if (!m_context.render_pass || size == 0) {
       spdlog::error("render pass为空");
       return;
     }
@@ -284,19 +304,11 @@ public:
         .offset = 0,
     };
     SDL_BindGPUVertexBuffers(m_context.render_pass, 0, &vbind, 1);
-    if (ibuff) {
-      SDL_GPUBufferBinding ibind{
-          .buffer = ibuff,
-          .offset = 0,
-      };
-      SDL_BindGPUIndexBuffer(m_context.render_pass, &ibind,
-                             SDL_GPU_INDEXELEMENTSIZE_32BIT);
-    }
     SDL_DrawGPUPrimitives(m_context.render_pass, size, 1, 0, 0);
   }
 
   template <typename T, typename... Args>
-  std::unique_ptr<RenderObject<T>> createRenderObject(Args&&... args) {
+  std::unique_ptr<RenderObject<T>> createRenderObject(Args &&...args) {
     auto ret =
         std::make_unique<RenderObject<T>>(this, std::forward<Args>(args)...);
     ret->init();

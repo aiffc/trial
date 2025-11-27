@@ -47,9 +47,15 @@ void RenderObject<T>::init() {
 }
 
 template <typename T> void RenderObject<T>::render() {
-  if (m_owner && m_init)
-    m_owner->drawBuff(m_vertex_buff,
-                      static_cast<uint32_t>(m_vertex_data.size()),
-                      m_index_buff);
+  if (m_owner && m_init) {
+    if (m_index_buff) {
+      m_owner->drawBuff(m_vertex_buff, m_index_buff,
+                        static_cast<uint32_t>(m_index_data.size()));
+
+    } else {
+      m_owner->drawBuff(m_vertex_buff,
+                        static_cast<uint32_t>(m_vertex_data.size()));
+    }
+  }
 }
 } // namespace engine::render
