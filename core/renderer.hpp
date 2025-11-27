@@ -63,8 +63,7 @@ private:
 
 private:
   template <typename T>
-  SDL_GPUBuffer *createBuff(size_t type_size,
-                            const std::vector<T>& datas, SDL_GPUBufferUsageFlags usage) {
+  SDL_GPUBuffer *createBuff(const std::vector<T>& datas, SDL_GPUBufferUsageFlags usage) {
     SDL_GPUBufferCreateInfo vbuff_info{
         .usage = usage,
         .size = static_cast<uint32_t>(sizeof(T) * datas.size()),
@@ -175,11 +174,10 @@ public:
       return;
     }
     SDL_GPUBuffer *vbuff =
-      createBuff<T>(sizeof(T), datas, SDL_GPU_BUFFERUSAGE_VERTEX);
+      createBuff<T>(datas, SDL_GPU_BUFFERUSAGE_VERTEX);
     SDL_GPUBuffer *ibuff = nullptr;
     if (!idatas.empty()) {
-      ibuff = createBuff<uint32_t>(sizeof(uint32_t), idatas,
-                         SDL_GPU_BUFFERUSAGE_INDEX);
+      ibuff = createBuff<uint32_t>(idatas, SDL_GPU_BUFFERUSAGE_INDEX);
     }
     m_vertex_buffs.emplace(key,
                            BuffInfo{
