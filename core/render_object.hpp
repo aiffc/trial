@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <spdlog/spdlog.h>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -19,6 +20,9 @@ private:
   SDL_GPUBuffer *m_vertex_buff{nullptr};
   std::vector<uint32_t> m_index_data;
   SDL_GPUBuffer *m_index_buff{nullptr};
+  SDL_GPUTexture *m_texture{nullptr};
+  SDL_GPUSampler *m_sampler{nullptr};
+
   bool m_init{false};
 
 public:
@@ -47,8 +51,7 @@ public:
     m_index_data.insert(m_index_data.end(), v.begin(), v.end());
   }
 
-  void init();
-
+  void init(std::string_view texture_path);
   void render();
 
   RenderObject(RenderObject &) = delete;

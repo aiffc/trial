@@ -11,36 +11,17 @@
 
 namespace engine::render {
 
-struct VertexBuffStruct {
+struct BaseObject {
   glm::vec2 pos;
-  glm::vec3 color;
+  glm::vec2 uv;
 };
 
-class VertexBuff final : public BasePipeline {
+class BaseObjectPipeline final : public BasePipeline {
   friend class Renderer;
-
-private:
-  std::vector<VertexBuffStruct> m_vertex_buffs;
-  std::vector<uint32_t> m_index_buffs;
-
-private:
-  void pushVBuff(const glm::vec2 &pos, const glm::vec3 &color) {
-    m_vertex_buffs.push_back(VertexBuffStruct{.pos = pos, .color = color});
-  }
-  void pushVBuff(const std::vector<VertexBuffStruct> &vbs) {
-    m_vertex_buffs.insert(m_vertex_buffs.end(), vbs.begin(), vbs.end());
-  }
-  void pushIBuff(uint32_t i) { m_index_buffs.push_back(i); }
-  void pushIBuff(const std::vector<uint32_t>& ibs) {
-    m_index_buffs.insert(m_index_buffs.end(), ibs.begin(), ibs.end());
-  }
-  void draw(SDL_GPURenderPass *render_pass) {
-    SDL_BindGPUGraphicsPipeline(render_pass, m_pipeline);
-  }
 
 public:
   using BasePipeline::BasePipeline;
-  ~VertexBuff() override = default;
+  ~BaseObjectPipeline() override = default;
 
   void init(const std::filesystem::path &vert,
             const std::filesystem::path &frag) override {
@@ -49,6 +30,7 @@ public:
       return;
     }
 
+    m_frag_config.sample_count = 1;
     SDL_GPUShader *vert_shader = loadShader(m_device, vert, m_vert_config);
     SDL_GPUShader *frag_shader = loadShader(m_device, frag, m_frag_config);
     if (!vert_shader || !frag_shader) {
@@ -77,32 +59,36 @@ public:
     vattribute[0].buffer_slot = 0;
     vattribute[0].location = 0;
     vattribute[0].format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2;
-    vattribute[0].offset = offsetof(VertexBuffStruct, pos);
+    vattribute[0].offset = offsetof(BaseObject, pos);
 
     vattribute[1].buffer_slot = 0;
     vattribute[1].location = 1;
-    vattribute[1].format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3;
-    vattribute[1].offset = offsetof(VertexBuffStruct, color);
+    vattribute[1].format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2;
+    vattribute[1].offset = offsetof(BaseObject, uv);
 
     std::vector<SDL_GPUVertexBufferDescription> vdescription{{
         .slot = 0,
-        .pitch = sizeof(VertexBuffStruct),
+        .pitch = sizeof(BaseObject),
         .input_rate = SDL_GPU_VERTEXINPUTRATE_VERTEX,
         .instance_step_rate = 0,
 
     }};
     SDL_GPUGraphicsPipelineCreateInfo create_info{
-      .vertex_shader = vert_shader, .fragment_shader = frag_shader,
-      .vertex_input_state =
-          {
-              .vertex_buffer_descriptions = vdescription.data(),
-              .num_vertex_buffers = static_cast<uint32_t>(vdescription.size()),
-              .vertex_attributes = vattribute.data(),
-              .num_vertex_attributes = static_cast<uint32_t>(vattribute.size()),
+        .vertex_shader = vert_shader,
+        .fragment_shader = frag_shader,
+        .vertex_input_state =
+            {
+                .vertex_buffer_descriptions = vdescription.data(),
+                .num_vertex_buffers =
+                    static_cast<uint32_t>(vdescription.size()),
+                .vertex_attributes = vattribute.data(),
+                .num_vertex_attributes =
+                    static_cast<uint32_t>(vattribute.size()),
 
-          },
-      .primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST,
-      .rasterizer_state = {
+            },
+        .primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST,
+        .rasterizer_state =
+            {
                 .fill_mode = SDL_GPU_FILLMODE_FILL,
                 .cull_mode = SDL_GPU_CULLMODE_BACK,
                 .front_face = SDL_GPU_FRONTFACE_COUNTER_CLOCKWISE,
@@ -167,12 +153,12 @@ public:
     SDL_ReleaseGPUShader(m_device, frag_shader);
   }
 
-  VertexBuff(VertexBuff &) = delete;
-  VertexBuff(VertexBuff &&) = delete;
-  VertexBuff &operator=(VertexBuff &) = delete;
-  VertexBuff &operator=(VertexBuff &&) = delete;
+  BaseObjectPipeline(BaseObjectPipeline &) = delete;
+  BaseObjectPipeline(BaseObjectPipeline &&) = delete;
+  BaseObjectPipeline &operator=(BaseObjectPipeline &) = delete;
+  BaseObjectPipeline &operator=(BaseObjectPipeline &&) = delete;
 };
 
-template class RenderObject<VertexBuffStruct>;
+template class RenderObject<BaseObject>;
 
 } // namespace engine::render

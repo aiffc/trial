@@ -1,23 +1,22 @@
 #include "render_object.hpp"
 #include "renderer.hpp"
 #include <spdlog/spdlog.h>
+#include <string_view>
 
 namespace engine::render {
 
 template <typename T> RenderObject<T>::~RenderObject() {
   if (m_init && m_owner) {
-    if (m_vertex_buff) {
-      m_owner->destroyBuff(m_vertex_buff);
-    }
-    if (m_index_buff) {
-      m_owner->destroyBuff(m_index_buff);
-    }
+    m_owner->destroyBuff(m_vertex_buff);
+    m_owner->destroyBuff(m_index_buff);
+    m_owner->destroySampler(m_sampler);
+    m_owner->destroyTexture(m_texture);
     m_owner = nullptr;
   }
 }
 
 template <typename T>
-void RenderObject<T>::init() {
+void RenderObject<T>::init(std::string_view texture_path) {
   if (!m_owner) {
     spdlog::error("无法初始化无效的渲染对象");
     return;
@@ -43,12 +42,37 @@ void RenderObject<T>::init() {
       return;
     }
   }
+  // 创建对象贴图
+  m_texture = m_owner->createTexture(texture_path);
+  if (!m_texture) {
+    spdlog::error("无法初始化无效的渲染对象");
+    m_owner->destroyBuff(m_vertex_buff);
+    if (m_index_buff) {
+      m_owner->destroyBuff(m_index_buff);
+    }
+    return;
+  }
+  m_sampler = m_owner->createSampler();
+  if (!m_sampler) {
+    spdlog::error("无法初始化无效的渲染对象");
+    m_owner->destroyBuff(m_vertex_buff);
+    if (m_index_buff) {
+      m_owner->destroyBuff(m_index_buff);
+    }
+    m_owner->destroyTexture(m_texture);
+    return;
+  }
+
   m_init = true;
 }
 
 template <typename T> void RenderObject<T>::render() {
-  if (m_owner && m_init) {
-    if (m_index_buff) {
+  if (m_init) {
+    if (m_texture && m_sampler && m_index_buff) {
+      m_owner->drawBuff(m_vertex_buff, m_index_buff,
+                        static_cast<uint32_t>(m_index_data.size()), m_texture,
+                        m_sampler);
+    } else if (m_index_buff) {
       m_owner->drawBuff(m_vertex_buff, m_index_buff,
                         static_cast<uint32_t>(m_index_data.size()));
 

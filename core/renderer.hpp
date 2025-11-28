@@ -1,17 +1,21 @@
 #pragma once
 
 // #include "graphics_pipeline.hpp"
+#include "SDL3_image/SDL_image.h"
 #include "pipelines/base.hpp"
-#include "pipelines/vertex.hpp"
+#include "pipelines/base_obj.hpp"
 #include "render_object.hpp"
 #include "spdlog/spdlog.h"
 #include <SDL3/SDL_error.h>
 #include <SDL3/SDL_gpu.h>
+#include <SDL3/SDL_render.h>
+#include <SDL3/SDL_surface.h>
 #include <SDL3/SDL_video.h>
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
 #include <memory>
+#include <string_view>
 #include <type_traits>
 #include <typeindex>
 #include <unordered_map>
@@ -129,6 +133,134 @@ public:
     }
   }
 
+  [[nodiscard]]SDL_GPUTexture *createTexture(std::string_view path) {
+    SDL_Surface *surface = IMG_Load(path.data());
+    if (!surface) {
+      return nullptr;
+    }
+    // 转换到rgba格式
+    SDL_Surface *usurface =
+        SDL_ConvertSurface(surface, SDL_PIXELFORMAT_ABGR8888);
+    SDL_DestroySurface(surface);
+
+    SDL_GPUTextureCreateInfo create_info{
+        .type = SDL_GPU_TEXTURETYPE_2D,
+        .format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM,
+        .usage = SDL_GPU_TEXTUREUSAGE_SAMPLER,
+        .width = static_cast<uint32_t>(usurface->w),
+        .height = static_cast<uint32_t>(usurface->h),
+        .layer_count_or_depth = 1,
+        .num_levels = 1,
+        .sample_count = SDL_GPU_SAMPLECOUNT_1,
+        .props = 0,
+    };
+    SDL_GPUTexture *texture =
+        SDL_CreateGPUTexture(m_device.get(), &create_info);
+    if (!texture) {
+      SDL_DestroySurface(usurface);
+      return nullptr;
+    }
+
+
+    // 创建transfer buffer将surface数据拷贝到transfer buffer
+    SDL_GPUTransferBufferCreateInfo transfer_info{
+        .usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD,
+        .size = static_cast<uint32_t>(usurface->w * usurface->h * 4),
+        .props = 0,
+    };
+    SDL_GPUTransferBuffer *transfer_buff =
+        SDL_CreateGPUTransferBuffer(m_device.get(), &transfer_info);
+    if (!transfer_buff) {
+      SDL_ReleaseGPUTexture(m_device.get(), texture);
+      SDL_DestroySurface(usurface);
+      return nullptr;
+    }
+
+    void *ptr = SDL_MapGPUTransferBuffer(m_device.get(), transfer_buff, false);
+    std::memcpy(ptr, usurface->pixels, usurface->w * usurface->h * 4);
+    SDL_UnmapGPUTransferBuffer(m_device.get(), transfer_buff);
+
+    SDL_GPUCommandBuffer *cmd = SDL_AcquireGPUCommandBuffer(m_device.get());
+    if (!cmd) {
+      SDL_ReleaseGPUTexture(m_device.get(), texture);
+      SDL_DestroySurface(usurface);
+      SDL_ReleaseGPUTransferBuffer(m_device.get(), transfer_buff);
+      return nullptr;
+    }
+    SDL_GPUCopyPass *cp = SDL_BeginGPUCopyPass(cmd);
+    if (!cp) {
+      SDL_ReleaseGPUTexture(m_device.get(), texture);
+      SDL_DestroySurface(usurface);
+      SDL_ReleaseGPUTransferBuffer(m_device.get(), transfer_buff);
+      return nullptr;
+    }
+
+    // 将transfer buffer中的数据拷贝到gpu texture
+    SDL_GPUTextureTransferInfo texture_transfer_info{
+        .transfer_buffer = transfer_buff,
+        .offset = 0,
+        .pixels_per_row = 0,
+        .rows_per_layer = 0,
+    };
+
+    SDL_GPUTextureRegion region{
+        .texture = texture,
+        .mip_level = 0,
+        .layer = 0,
+        .x = 0,
+        .y = 0,
+        .z = 0,
+        .w = static_cast<uint32_t>(usurface->w),
+        .h = static_cast<uint32_t>(usurface->h),
+        .d = 1,
+    };
+    SDL_UploadToGPUTexture(cp, &texture_transfer_info, &region, false);
+    SDL_EndGPUCopyPass(cp);
+    SDL_SubmitGPUCommandBuffer(cmd);
+    SDL_ReleaseGPUTransferBuffer(m_device.get(), transfer_buff);
+    SDL_DestroySurface(usurface);
+    return texture;
+  }
+
+  // TODO 定制采样器
+  [[nodiscard]]SDL_GPUSampler *createSampler() {
+    SDL_GPUSamplerCreateInfo sampler_create_info{
+        .min_filter = SDL_GPU_FILTER_NEAREST,
+        .mag_filter = SDL_GPU_FILTER_NEAREST,
+        .mipmap_mode = SDL_GPU_SAMPLERMIPMAPMODE_NEAREST,
+        .address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
+        .address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
+        .address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE,
+        .mip_lod_bias = 0.0f,
+        .max_anisotropy = 0.0f,
+        .compare_op = SDL_GPU_COMPAREOP_GREATER_OR_EQUAL,
+        .min_lod = 0.0f,
+        .max_lod = 0.0f,
+        .enable_anisotropy = false,
+        .enable_compare = false,
+        .padding1 = 0,
+        .padding2 = 0,
+        .props = 0,
+    };
+    SDL_GPUSampler *sampler =
+        SDL_CreateGPUSampler(m_device.get(), &sampler_create_info);
+    return sampler;
+  }
+
+  void destroyTexture(SDL_GPUTexture *texture) {
+    if (texture) {
+      SDL_ReleaseGPUTexture(m_device.get(), texture);
+      texture = nullptr;
+    }
+  }
+
+  void destroySampler(SDL_GPUSampler *sampler) {
+    if (sampler) {
+      SDL_ReleaseGPUSampler(m_device.get(), sampler);
+      sampler = nullptr;
+    }
+  }
+
   /*********************** pipeline ***********************/
   template <typename T>
   T *addPipeline(const std::filesystem::path &vert,
@@ -187,8 +319,8 @@ public:
     }
     m_window = std::unique_ptr<SDL_Window, WindowDelter>(window);
     m_device = std::unique_ptr<SDL_GPUDevice, DeviceDeleter>(device);
-    addPipeline<VertexBuff>("./shaders/vertex_buff/vert.spv",
-                            "./shaders/vertex_buff/frag.spv");
+    addPipeline<BaseObjectPipeline>("../shaders/vertex_buff/vert.spv",
+                                    "../shaders/vertex_buff/frag.spv");
     return true;
   }
 
@@ -261,6 +393,14 @@ public:
     return false;
   }
 
+  void bindTexture(SDL_GPUTexture *texture, SDL_GPUSampler *sampler) {
+    if (texture && sampler && m_context.render_pass) {
+      SDL_GPUTextureSamplerBinding texture_binding{.texture = texture,
+                                                   .sampler = sampler};
+      SDL_BindGPUFragmentSamplers(m_context.render_pass, 0, &texture_binding, 1);
+    }
+  }
+
   void drawBuff(SDL_GPUBuffer *vbuff, SDL_GPUBuffer *ibuff, uint32_t size) {
     if (!m_context.render_pass || size == 0) {
       spdlog::error("render pass为空");
@@ -288,6 +428,33 @@ public:
     SDL_DrawGPUIndexedPrimitives(m_context.render_pass, size, 1, 0, 0, 0);
   }
 
+  void drawBuff(SDL_GPUBuffer *vbuff, SDL_GPUBuffer *ibuff, uint32_t size, SDL_GPUTexture* texture, SDL_GPUSampler* sampler) {
+    if (!m_context.render_pass || size == 0) {
+      spdlog::error("render pass为空");
+      return;
+    }
+
+    if (!vbuff || !ibuff || !texture || !sampler) {
+      spdlog::error("vbuff为空");
+      return;
+    }
+
+    SDL_GPUBufferBinding vbind{
+        .buffer = vbuff,
+        .offset = 0,
+    };
+    SDL_BindGPUVertexBuffers(m_context.render_pass, 0, &vbind, 1);
+
+    SDL_GPUBufferBinding ibind{
+        .buffer = ibuff,
+        .offset = 0,
+    };
+    SDL_BindGPUIndexBuffer(m_context.render_pass, &ibind,
+                           SDL_GPU_INDEXELEMENTSIZE_32BIT);
+    bindTexture(texture, sampler);
+    SDL_DrawGPUIndexedPrimitives(m_context.render_pass, size, 1, 0, 0, 0);
+  }
+
   void drawBuff(SDL_GPUBuffer *vbuff, uint32_t size) {
     if (!m_context.render_pass || size == 0) {
       spdlog::error("render pass为空");
@@ -308,10 +475,10 @@ public:
   }
 
   template <typename T, typename... Args>
-  std::unique_ptr<RenderObject<T>> createRenderObject(Args &&...args) {
+  std::unique_ptr<RenderObject<T>> createRenderObject(std::string_view file, Args &&...args) {
     auto ret =
         std::make_unique<RenderObject<T>>(this, std::forward<Args>(args)...);
-    ret->init();
+    ret->init(file);
     return ret;
   }
 
