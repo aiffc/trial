@@ -27,7 +27,9 @@ find_package(spdlog REQUIRED)
 
 set(SOURCES
   main.cpp
-  core/render_object.cpp
+  engine/core/app.cpp
+  engine/core/time.cpp
+  engine/renderer/render_object.cpp
 )
 
 add_executable(${TARGET} ${SOURCES})
