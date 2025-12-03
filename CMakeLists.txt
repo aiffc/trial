@@ -29,7 +29,7 @@ set(SOURCES
   main.cpp
   engine/core/app.cpp
   engine/core/time.cpp
-  engine/renderer/render_object.cpp
+  engine/renderer/tile.cpp
 )
 
 add_executable(${TARGET} ${SOURCES})

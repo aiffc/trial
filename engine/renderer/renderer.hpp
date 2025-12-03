@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
+#include <glm/ext/vector_int2.hpp>
 #include <memory>
 #include <string_view>
 #include <type_traits>
@@ -332,10 +333,10 @@ public:
     m_device = std::unique_ptr<SDL_GPUDevice, DeviceDeleter>(device);
 
     std::vector<engine::render::VertexInput> vertex_datas{
-        {{-0.1f, -0.1f}, {0.0f, 1.0f}},
-        {{0.1f, -0.1f}, {1.0f, 1.0f}},
-        {{0.1f, 0.1f}, {1.0f, 0.0f}},
-        {{-0.1f, 0.1f}, {0.0f, 0.0f}},
+        {{-1.0f, -1.0f}, {0.0f, 1.0f}},
+        {{1.0f, -1.0f}, {1.0f, 1.0f}},
+        {{1.0f, 1.0f}, {1.0f, 0.0f}},
+        {{-1.0f, 1.0f}, {0.0f, 0.0f}},
     };
     std::vector<uint32_t> index_datas{0, 1, 2, 2, 3, 0};
 
@@ -463,6 +464,12 @@ public:
     auto ret = std::make_unique<Tile>(this, std::forward<Args>(args)...);
     ret->init(path);
     return ret;
+  }
+
+  glm::vec2 getWindowSize() const {
+    int w, h;
+    SDL_GetWindowSize(m_window.get(), &w, &h);
+    return {static_cast<float>(w), static_cast<float>(h)};
   }
 
   Renderer(Renderer &) = delete;

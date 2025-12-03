@@ -14,8 +14,8 @@ namespace engine::render {
 
 // 统一用这个顶点数据
 struct VertexInput {
-  glm::vec2 size;
-  glm::vec2 texture_uv;
+  glm::vec2 vertex_pos;
+  glm::vec2 texture_coord;
 };
 
 struct ShaderConfig {

@@ -24,7 +24,7 @@ public:
       return;
     }
 
-    m_vert_config.uniform_buff_count = 1;
+    m_vert_config.uniform_buff_count = 2;
     m_frag_config.sample_count = 1;
     SDL_GPUShader *vert_shader = loadShader(m_device, vert, m_vert_config);
     SDL_GPUShader *frag_shader = loadShader(m_device, frag, m_frag_config);
@@ -54,12 +54,12 @@ public:
     vattribute[0].buffer_slot = 0;
     vattribute[0].location = 0;
     vattribute[0].format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2;
-    vattribute[0].offset = offsetof(VertexInput, size);
+    vattribute[0].offset = offsetof(VertexInput, vertex_pos);
 
     vattribute[1].buffer_slot = 0;
     vattribute[1].location = 1;
     vattribute[1].format = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2;
-    vattribute[1].offset = offsetof(VertexInput, texture_uv);
+    vattribute[1].offset = offsetof(VertexInput, texture_coord);
 
     std::vector<SDL_GPUVertexBufferDescription> vdescription{{
         .slot = 0,

@@ -23,6 +23,9 @@ namespace engine::render {
   void Tile::render() {
     if (m_init) {
       m_owner->bindPipeline<TilePipeline>();
+      // TODO 每次都要获取？
+      RenderInfo rinfo { m_owner->getWindowSize() };
+      m_owner->pushVertexUniform<RenderInfo>(rinfo);
       m_owner->pushVertexUniform<TileInfo>(m_tile_info);
       m_owner->bindTexture(m_texture);
       m_owner->draw();

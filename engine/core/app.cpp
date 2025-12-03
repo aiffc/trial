@@ -88,7 +88,7 @@ bool App::event(const SDL_Event *event [[maybe_unused]]) { return true; }
 
 void App::testInit() {
   if (m_render) {
-    m_tile = m_render->createTile("../asset/trial.png", glm::vec2{0.3, 0.3});
+    m_tile = m_render->createTile("../asset/trial.png", glm::vec2{512.0f, 360.0f});
   }
 }
 
