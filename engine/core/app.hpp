@@ -5,11 +5,13 @@
 
 namespace engine::render {
 class Renderer;
+class Tile;
 } // namespace engine::render
 
 namespace engine::core {
 
 class Time;
+
 /*
  * app累需要手动进行初始化和退出
  */
@@ -21,6 +23,11 @@ private:
 private:
   void initAppInfo();
   void initSDL();
+
+private:
+  std::unique_ptr<render::Tile> m_tile;
+  void testInit();
+  void testRender();
 
 public:
   App();

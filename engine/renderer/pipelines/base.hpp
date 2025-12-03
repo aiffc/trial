@@ -1,6 +1,5 @@
 #pragma once
 #include <SDL3/SDL_error.h>
-#include <iostream>
 #include <SDL3/SDL_gpu.h>
 #include <SDL3/SDL_iostream.h>
 #include <SDL3/SDL_stdinc.h>
@@ -8,10 +7,16 @@
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
-#include <memory>
-#include <spdlog/spdlog.h>
+#include "glm/glm.hpp"
+#include "spdlog/spdlog.h"
 
 namespace engine::render {
+
+// 统一用这个顶点数据
+struct VertexInput {
+  glm::vec2 size;
+  glm::vec2 texture_uv;
+};
 
 struct ShaderConfig {
   uint32_t sample_count{0};
