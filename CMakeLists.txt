@@ -30,6 +30,8 @@ set(SOURCES
   engine/core/app.cpp
   engine/core/time.cpp
   engine/renderer/tile.cpp
+  engine/scene/scene.cpp
+  engine/scene/manager.cpp
 )
 
 add_executable(${TARGET} ${SOURCES})

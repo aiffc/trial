@@ -1,6 +1,8 @@
 #include "app.hpp"
+#include "../scene/manager.hpp"
 #include "../renderer/renderer.hpp"
 #include "SDL3/SDL.h"
+#include "context.hpp"
 #include "spdlog/spdlog.h"
 #include "time.hpp"
 #include <exception>
@@ -16,7 +18,7 @@ App::App() = default;
 App::~App() = default;
 
 void App::initAppInfo() {
-  if (!SDL_SetAppMetadata("Example Snake game", "1.0", "com.example.Snake")) {
+  if (!SDL_SetAppMetadata("trial", "0.1", "trial")) {
     spdlog::error("设置app元数据失败{}", SDL_GetError());
     throw std::runtime_error("设置app元数据失败");
   }
@@ -54,6 +56,9 @@ bool App::init() {
     m_time = std::make_unique<Time>(144);
     m_time->init();
 
+    m_context = std::make_unique<Context>(*m_render);
+    m_scene_manager = std::make_unique<engine::scene::Manager>(*m_context);
+
     // TEST
     testInit();
   } catch (const std::exception &e) {
@@ -67,6 +72,7 @@ void App::deinit() {
   // TEST
   m_tile.reset();
   // 先销毁渲染器，再退出SDL
+  m_scene_manager.reset();
   m_render.reset();
   m_time->deinit();
   SDL_Quit();
@@ -75,16 +81,24 @@ bool App::render() {
   if (m_render->begin()) {
     // TEST
     testRender();
+    m_scene_manager->render();
     m_render->end();
   }
   return true;
 }
 bool App::update() {
   m_time->update();
-  // float dt = m_time->getDeltaTime();
+  float dt = m_time->getDeltaTime();
+  m_scene_manager->update(dt);
   return true;
 }
-bool App::event(const SDL_Event *event [[maybe_unused]]) { return true; }
+bool App::event(const SDL_Event *event [[maybe_unused]]) {
+  if (event->type == SDL_EVENT_QUIT) {
+    return false;
+  }
+  m_scene_manager->event();
+  return true;
+  }
 
 void App::testInit() {
   if (m_render) {

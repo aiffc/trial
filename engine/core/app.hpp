@@ -8,9 +8,14 @@ class Renderer;
 class Tile;
 } // namespace engine::render
 
+namespace engine::scene {
+class Manager;
+}
+
 namespace engine::core {
 
 class Time;
+class Context;
 
 /*
  * app累需要手动进行初始化和退出
@@ -19,6 +24,8 @@ class App final {
 private:
   std::unique_ptr<Time> m_time;
   std::unique_ptr<engine::render::Renderer> m_render;
+  std::unique_ptr<Context> m_context;
+  std::unique_ptr<engine::scene::Manager> m_scene_manager;
 
 private:
   void initAppInfo();

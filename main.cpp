@@ -1,4 +1,5 @@
 #include "engine/core/app.hpp"
+#include <SDL3/SDL_init.h>
 #include <memory>
 #define SDL_MAIN_USE_CALLBACKS 1 /* use the callbacks instead of main() */
 #include <SDL3/SDL.h>
@@ -17,7 +18,7 @@ SDL_AppResult SDL_AppInit(void **appstate [[maybe_unused]],
 }
 
 SDL_AppResult SDL_AppEvent(void *appstate [[maybe_unused]], SDL_Event *event) {
-  if (event->type == SDL_EVENT_QUIT) {
+  if (!app->event(event)) {
     return SDL_APP_SUCCESS;
   }
   return SDL_APP_CONTINUE;

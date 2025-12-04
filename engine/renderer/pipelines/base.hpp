@@ -1,4 +1,7 @@
 #pragma once
+
+#include "glm/glm.hpp"
+#include "spdlog/spdlog.h"
 #include <SDL3/SDL_error.h>
 #include <SDL3/SDL_gpu.h>
 #include <SDL3/SDL_iostream.h>
@@ -7,8 +10,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
-#include "glm/glm.hpp"
-#include "spdlog/spdlog.h"
 
 namespace engine::render {
 
@@ -60,6 +61,7 @@ static SDL_GPUShader *loadShader(SDL_GPUDevice *device,
 
 class BasePipeline {
   friend class Renderer;
+
 protected:
   SDL_GPUDevice *m_device;
   SDL_Window *m_window;
@@ -70,7 +72,8 @@ protected:
   ShaderConfig m_frag_config{.shader_stage = SDL_GPU_SHADERSTAGE_FRAGMENT};
 
 public:
-  BasePipeline(SDL_GPUDevice *device, SDL_Window* window) : m_device{device}, m_window{window} {}
+  BasePipeline(SDL_GPUDevice *device, SDL_Window *window)
+      : m_device{device}, m_window{window} {}
   virtual ~BasePipeline() {
     if (m_pipeline && m_device) {
       SDL_ReleaseGPUGraphicsPipeline(m_device, m_pipeline);
