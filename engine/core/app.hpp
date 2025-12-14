@@ -5,12 +5,12 @@
 
 namespace engine::render {
 class Renderer;
-class Tile;
 } // namespace engine::render
 
 namespace engine::scene {
 class Manager;
-}
+class Scene;
+} // namespace engine::scene
 
 namespace engine::core {
 
@@ -31,11 +31,6 @@ private:
   void initAppInfo();
   void initSDL();
 
-private:
-  std::unique_ptr<render::Tile> m_tile;
-  void testInit();
-  void testRender();
-
 public:
   App();
   ~App();
@@ -45,6 +40,8 @@ public:
   bool render();
   bool update();
   bool event(const SDL_Event *);
+
+  void pushScene(std::unique_ptr<engine::scene::Scene> &&);
 
   App(App &) = delete;
   App(App &&) = delete;

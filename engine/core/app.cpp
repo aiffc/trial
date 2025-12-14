@@ -1,10 +1,11 @@
 #include "app.hpp"
-#include "../scene/manager.hpp"
 #include "../renderer/renderer.hpp"
+#include "../scene/manager.hpp"
 #include "SDL3/SDL.h"
 #include "context.hpp"
 #include "spdlog/spdlog.h"
 #include "time.hpp"
+#include <algorithm>
 #include <exception>
 #include <memory>
 #include <stdexcept>
@@ -58,9 +59,6 @@ bool App::init() {
 
     m_context = std::make_unique<Context>(*m_render);
     m_scene_manager = std::make_unique<engine::scene::Manager>(*m_context);
-
-    // TEST
-    testInit();
   } catch (const std::exception &e) {
     spdlog::error("app初始化失败{}", e.what());
     return false;
@@ -69,42 +67,40 @@ bool App::init() {
 }
 
 void App::deinit() {
-  // TEST
-  m_tile.reset();
   // 先销毁渲染器，再退出SDL
   m_scene_manager.reset();
   m_render.reset();
   m_time->deinit();
   SDL_Quit();
 }
+
 bool App::render() {
   if (m_render->begin()) {
-    // TEST
-    testRender();
+
     m_scene_manager->render();
     m_render->end();
   }
   return true;
 }
+
 bool App::update() {
   m_time->update();
   float dt = m_time->getDeltaTime();
   m_scene_manager->update(dt);
   return true;
 }
+
 bool App::event(const SDL_Event *event [[maybe_unused]]) {
   if (event->type == SDL_EVENT_QUIT) {
     return false;
   }
   m_scene_manager->event();
   return true;
-  }
-
-void App::testInit() {
-  if (m_render) {
-    m_tile = m_render->createTile("../asset/trial.png", glm::vec2{512.0f, 360.0f});
-  }
 }
 
-void App::testRender() { m_tile->render(); }
+void App::pushScene(std::unique_ptr<engine::scene::Scene> &&scene) {
+  if (scene) {
+    m_scene_manager->push(std::move(scene));
+  }
+}
 } // namespace engine::core

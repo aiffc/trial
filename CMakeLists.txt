@@ -32,6 +32,7 @@ set(SOURCES
   engine/renderer/tile.cpp
   engine/scene/scene.cpp
   engine/scene/manager.cpp
+  game/scenes/test_scene.cpp
 )
 
 add_executable(${TARGET} ${SOURCES})

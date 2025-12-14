@@ -11,7 +11,7 @@ class Context;
 
 namespace engine::scene {
 class Scene {
-private:
+protected:
   std::string m_name;
   std::vector<std::unique_ptr<engine::object::Object>> m_objs;
   std::vector<std::unique_ptr<engine::object::Object>> m_pending;

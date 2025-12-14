@@ -1,5 +1,7 @@
 #include "engine/core/app.hpp"
+#include "game/scenes/test_scene.hpp"
 #include <SDL3/SDL_init.h>
+#include <algorithm>
 #include <memory>
 #define SDL_MAIN_USE_CALLBACKS 1 /* use the callbacks instead of main() */
 #include <SDL3/SDL.h>
@@ -14,6 +16,8 @@ SDL_AppResult SDL_AppInit(void **appstate [[maybe_unused]],
   if (!app->init()) {
     return SDL_APP_FAILURE;
   }
+  auto scene = std::make_unique<game::TestScene>("test scene");
+  app->pushScene(std::move(scene));
   return SDL_APP_CONTINUE;
 }
 

@@ -49,7 +49,8 @@ void Scene::init(engine::core::Context &) {
   spdlog::trace("场景{}初始化成功", m_name);
 }
 
-void Scene::update(float dt, engine::core::Context &context) {
+void Scene::update(float dt [[maybe_unused]],
+                   engine::core::Context &context [[maybe_unused]]) {
   // 调用对象跟新
   for (auto it = m_objs.begin(); it != m_objs.end();) {
     if (*it) {
@@ -57,7 +58,7 @@ void Scene::update(float dt, engine::core::Context &context) {
       if ((*it)->needRemove()) {
         it = m_objs.erase(it);
       } else {
-        (*it)->update(dt, context);
+        //  (*it)->update(dt);
         it++;
       }
     }
@@ -65,17 +66,12 @@ void Scene::update(float dt, engine::core::Context &context) {
   processPending();
 }
 
-void Scene::render(engine::core::Context &context) {
+void Scene::render(engine::core::Context &context [[maybe_unused]]) {
   // 调用对象渲染
   for (const auto &obj : m_objs) {
-    obj->render(context);
+    obj->render();
   }
 }
 
-void Scene::event(engine::core::Context &context) {
-  // 调用对象事件
-  for (const auto &obj : m_objs) {
-    obj->event(context);
-  }
-}
+void Scene::event(engine::core::Context &context [[maybe_unused]]) {}
 } // namespace engine::scene
