@@ -29,13 +29,17 @@ public:
 
   template <typename... Args>
   void initTile(engine::core::Context &context, Args &&...args) {
-    m_tile = context.getRenderer().createTile(std::forward<Args>(args)...);
+    m_tile =
+        context.getRenderer().createTile(context, std::forward<Args>(args)...);
   }
 
   void render() {
     if (m_tile)
       m_tile->render();
   }
+
+  // 移动tile
+  void move(const glm::vec2 &d) { m_tile->move(d); }
 
   Object(Object &) = delete;
   Object(Object &&) = delete;

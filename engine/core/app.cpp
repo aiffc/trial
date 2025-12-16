@@ -1,5 +1,7 @@
 #include "app.hpp"
+#include "../input/input.hpp"
 #include "../renderer/renderer.hpp"
+#include "../resource_manager/resource_manager.hpp"
 #include "../scene/manager.hpp"
 #include "SDL3/SDL.h"
 #include "context.hpp"
@@ -56,8 +58,14 @@ bool App::init() {
     // 初始化时间管理器
     m_time = std::make_unique<Time>(144);
     m_time->init();
+    // 初始化输入管理
+    m_input_manager = std::make_unique<engine::input::Manager>();
+    // 初始化资源管理器
+    m_resource_manager = std::make_unique<engine::resource::Manager>();
+    m_resource_manager->init(*m_render);
 
-    m_context = std::make_unique<Context>(*m_render);
+    m_context = std::make_unique<Context>(*m_render, *m_input_manager,
+                                          *m_resource_manager);
     m_scene_manager = std::make_unique<engine::scene::Manager>(*m_context);
   } catch (const std::exception &e) {
     spdlog::error("app初始化失败{}", e.what());
@@ -69,6 +77,8 @@ bool App::init() {
 void App::deinit() {
   // 先销毁渲染器，再退出SDL
   m_scene_manager.reset();
+  m_resource_manager.reset();
+  m_input_manager.reset();
   m_render.reset();
   m_time->deinit();
   SDL_Quit();
@@ -91,7 +101,8 @@ bool App::update() {
 }
 
 bool App::event(const SDL_Event *event [[maybe_unused]]) {
-  if (event->type == SDL_EVENT_QUIT) {
+  m_input_manager->update(*event);
+  if (m_input_manager->shouldQuit()) {
     return false;
   }
   m_scene_manager->event();

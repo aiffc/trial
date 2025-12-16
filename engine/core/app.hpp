@@ -12,6 +12,14 @@ class Manager;
 class Scene;
 } // namespace engine::scene
 
+namespace engine::input {
+class Manager;
+}
+
+namespace engine::resource {
+class Manager;
+}
+
 namespace engine::core {
 
 class Time;
@@ -24,6 +32,8 @@ class App final {
 private:
   std::unique_ptr<Time> m_time;
   std::unique_ptr<engine::render::Renderer> m_render;
+  std::unique_ptr<engine::input::Manager> m_input_manager;
+  std::unique_ptr<engine::resource::Manager> m_resource_manager;
   std::unique_ptr<Context> m_context;
   std::unique_ptr<engine::scene::Manager> m_scene_manager;
 

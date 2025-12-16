@@ -30,8 +30,13 @@ set(SOURCES
   engine/core/app.cpp
   engine/core/time.cpp
   engine/renderer/tile.cpp
+  engine/input/input.cpp
   engine/scene/scene.cpp
   engine/scene/manager.cpp
+  engine/resource_manager/audio_manager.cpp
+  engine/resource_manager/font_manager.cpp
+  engine/resource_manager/texture_manager.cpp
+  engine/resource_manager/resource_manager.cpp
   game/scenes/test_scene.cpp
 )
 

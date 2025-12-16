@@ -1,13 +1,17 @@
 #include "tile.hpp"
+#include "../resource_manager/resource_manager.hpp"
 #include "renderer.hpp"
 #include "spdlog/spdlog.h"
+#include <string>
 
 namespace engine::render {
-Tile::~Tile() {
-  if (m_init && m_texture && m_owner) {
-    m_owner->destroyTexture(m_texture);
-  }
-}
+Tile::~Tile() = default;
+// 由资源管理器管理无需再次destroy
+// Tile::~Tile {
+//   if (m_init && m_texture && m_owner) {
+//     m_owner->destroyTexture(m_texture);
+//   }
+// }
 
 void Tile::init(std::string_view texture_path) {
   if (m_owner) {
@@ -18,6 +22,16 @@ void Tile::init(std::string_view texture_path) {
     }
     m_init = true;
   }
+}
+
+void Tile::init(engine::core::Context &context, std::string_view texture_path) {
+  std::string tp{texture_path};
+  m_texture = context.getResource().textureGetOrLoad(tp);
+  if (!m_texture) {
+    spdlog::error("创建gpu texture失败");
+    return;
+  }
+  m_init = true;
 }
 
 void Tile::render() {

@@ -459,9 +459,10 @@ public:
   }
 
   template <typename... Args>
-  std::unique_ptr<Tile> createTile(std::string_view path, Args &&...args) {
+  std::unique_ptr<Tile> createTile(engine::core::Context &context,
+                                   std::string_view path, Args &&...args) {
     auto ret = std::make_unique<Tile>(this, std::forward<Args>(args)...);
-    ret->init(path);
+    ret->init(context, path);
     return ret;
   }
 
